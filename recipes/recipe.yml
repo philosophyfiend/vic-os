@@ -1,45 +1,68 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
 name: vic-os
-# description will be included in the image's metadata
-description: This is my personal OS image.
+description: Bazzite-based image with COSMIC Desktop instead of KDE Plasma
+base-image: ghcr.io/ublue-os/bazzite
+image-version: stable
 
-# the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
-image-version: 42 # latest is also supported if you want new updates ASAP
-
-# module configuration, executed in order
-# you can include multiple instances of the same module
 modules:
-  - type: files
-    files:
-      - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
-
-  - type: dnf
+  # Install COSMIC from COPR and remove KDE/SDDM
+  - type: rpm-ostree
     repos:
-      copr:
-        - atim/starship
+      - https://copr.fedorainfracloud.org/coprs/ryanabx/cosmic-epoch/repo/fedora-%OS_VERSION%/ryanabx-cosmic-epoch-fedora-%OS_VERSION%.repo
     install:
-      packages:
-        - micro
-        - starship
+      - @cosmic-desktop-environment
+      - cosmic-greeter
+      - cosmic-edit
+      - cosmic-files
+      - cosmic-player
+      - cosmic-screenshot
+      - cosmic-randr
     remove:
-      packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
-        - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+      - plasma-desktop
+      - plasma-workspace
+      - kde-workspace
+      - kde-settings
+      - sddm
+      - sddm-breeze
+      - kde-cli-tools
+      - konsole
+      - kwin
+      - kscreenlocker
 
+  # Set COSMIC greeter as the display manager
+  - type: systemd
+    system:
+      enabled:
+        - cosmic-greeter.service
+      disabled:
+        - sddm.service
+      masked:
+        - sddm.service
+
+  # Flatpaks tailored for COSMIC/Wayland
   - type: default-flatpaks
-    configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
-        scope: system
-        # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
-          - org.mozilla.firefox
-          - org.gnome.Loupe
-      - scope: user # Also add Flathub user repo, but no user packages
+    system:
+      install:
+        - org.mozilla.Firefox
+        - com.github.tchx84.Flatseal
+        - md.obsidian.Obsidian
+        - com.discordapp.Discord
+        - org.gnome.Console
+        - org.gnome.Calculator
+        - org.gnome.FileRoller
+        - org.gnome.TextEditor
+        - org.videolan.VLC
+        - com.github.wwmm.easyeffects
+        - org.libreoffice.LibreOffice
+        - org.gimp.GIMP
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+  # Branding
+  - type: os-release
+    name: vic-os
+    pretty-name: "vic‑os (Bazzite + COSMIC)"
+    variant: "vic-os"
+    variant-id: vic-os
+
+  # Sign the image if cosign is configured
+  - type: signing

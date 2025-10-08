@@ -6,7 +6,6 @@ base-image: quay.io/fedora-ostree-desktops/cosmic-atomic:fedora-42
 image-version: latest
 
 modules:
-  # 1) Switch to kernel-blu (Bazzite-style behavior). This is the default for vic-os.
   - type: rpm-ostree
     repos:
       - https://copr.fedorainfracloud.org/coprs/sentry/kernel-blu/repo/fedora-%OS_VERSION%/sentry-kernel-blu-fedora-%OS_VERSION%.repo
@@ -16,20 +15,17 @@ modules:
       - kernel-modules
       - kernel-modules-extra
 
-  # 2) Install akmods from the bazzite stream so modules match kernel ABI
   - type: akmods
     base: bazzite
     install:
-      - evdi           # DisplayLink (USB graphics)
-      - xone           # Xbox One/Series controllers
-      - v4l2loopback   # Virtual camera (OBS etc.)
-      - openrazer      # Razer devices
-      - dualsense      # PS5 controller
-    # If you need NVIDIA, uncomment ONE of the following:
-    # nvidia-driver: nvidia-open   # Turing+ (preferred when supported)
-    # nvidia-driver: nvidia        # Proprietary
+      - evdi
+      - xone
+      - v4l2loopback
+      - openrazer
+      - dualsense
+    # nvidia-driver: nvidia-open
+    # nvidia-driver: nvidia
 
-  # 3) System packages useful for gaming
   - type: rpm-ostree
     install:
       - gamemode
@@ -37,7 +33,6 @@ modules:
       - mangohud
       - power-profiles-daemon
 
-  # 4) Flatpaks tailored for COSMIC/Wayland
   - type: default-flatpaks
     system:
       install:
@@ -54,12 +49,11 @@ modules:
         - org.libreoffice.LibreOffice
         - org.gimp.GIMP
 
-  # 5) Branding
   - type: os-release
-    name: vic-os
-    pretty-name: "vic‑os (COSMIC Atomic + kernel-blu + akmods)"
-    variant: "vic-os"
-    variant-id: vic-os
+    properties:
+      NAME: vic-os
+      PRETTY_NAME: "vic‑os (COSMIC Atomic + kernel-blu + akmods)"
+      VARIANT: "vic-os"
+      VARIANT_ID: vic-os
 
-  # 6) Sign the image if cosign is configured
   - type: signing

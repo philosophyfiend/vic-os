@@ -6,7 +6,6 @@ base-image: quay.io/fedora-ostree-desktops/cosmic-atomic:fedora-42
 image-version: latest
 
 modules:
-  # Keep Fedora's stock kernel; only add akmods drivers (wider compatibility)
   - type: akmods
     base: main
     install:
@@ -15,7 +14,6 @@ modules:
       - v4l2loopback
       - openrazer
       - dualsense
-    # Optional NVIDIA support (uncomment ONE):
     # nvidia-driver: nvidia-open
     # nvidia-driver: nvidia
 
@@ -43,9 +41,10 @@ modules:
         - org.gimp.GIMP
 
   - type: os-release
-    name: vic-os
-    pretty-name: "vic‑os (COSMIC Atomic + UBlue akmods)"
-    variant: "vic-os-safe"
-    variant-id: vic-os-safe
+    properties:
+      NAME: vic-os
+      PRETTY_NAME: "vic‑os (COSMIC Atomic + UBlue akmods)"
+      VARIANT: "vic-os-safe"
+      VARIANT_ID: vic-os-safe
 
   - type: signing

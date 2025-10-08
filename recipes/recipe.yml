@@ -1,46 +1,43 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
 name: vic-os
-description: Bazzite-based image with COSMIC Desktop instead of KDE Plasma
-base-image: ghcr.io/ublue-os/bazzite
-image-version: stable
+description: Fedora COSMIC Atomic base + kernel-blu (COPR) + UBlue akmods (bazzite stream) + COSMIC/Wayland Flatpaks
+base-image: quay.io/fedora-ostree-desktops/cosmic-atomic:fedora-42
+image-version: latest
 
 modules:
-  # Install COSMIC from COPR and remove KDE/SDDM
+  # 1) Switch to kernel-blu (Bazzite-style behavior). This is the default for vic-os.
   - type: rpm-ostree
     repos:
-      - https://copr.fedorainfracloud.org/coprs/ryanabx/cosmic-epoch/repo/fedora-%OS_VERSION%/ryanabx-cosmic-epoch-fedora-%OS_VERSION%.repo
+      - https://copr.fedorainfracloud.org/coprs/sentry/kernel-blu/repo/fedora-%OS_VERSION%/sentry-kernel-blu-fedora-%OS_VERSION%.repo
     install:
-      - @cosmic-desktop-environment
-      - cosmic-greeter
-      - cosmic-edit
-      - cosmic-files
-      - cosmic-player
-      - cosmic-screenshot
-      - cosmic-randr
-    remove:
-      - plasma-desktop
-      - plasma-workspace
-      - kde-workspace
-      - kde-settings
-      - sddm
-      - sddm-breeze
-      - kde-cli-tools
-      - konsole
-      - kwin
-      - kscreenlocker
+      - kernel
+      - kernel-core
+      - kernel-modules
+      - kernel-modules-extra
 
-  # Set COSMIC greeter as the display manager
-  - type: systemd
-    system:
-      enabled:
-        - cosmic-greeter.service
-      disabled:
-        - sddm.service
-      masked:
-        - sddm.service
+  # 2) Install akmods from the bazzite stream so modules match kernel ABI
+  - type: akmods
+    base: bazzite
+    install:
+      - evdi           # DisplayLink (USB graphics)
+      - xone           # Xbox One/Series controllers
+      - v4l2loopback   # Virtual camera (OBS etc.)
+      - openrazer      # Razer devices
+      - dualsense      # PS5 controller
+    # If you need NVIDIA, uncomment ONE of the following:
+    # nvidia-driver: nvidia-open   # Turing+ (preferred when supported)
+    # nvidia-driver: nvidia        # Proprietary
 
-  # Flatpaks tailored for COSMIC/Wayland
+  # 3) System packages useful for gaming
+  - type: rpm-ostree
+    install:
+      - gamemode
+      - goverlay
+      - mangohud
+      - power-profiles-daemon
+
+  # 4) Flatpaks tailored for COSMIC/Wayland
   - type: default-flatpaks
     system:
       install:
@@ -57,12 +54,12 @@ modules:
         - org.libreoffice.LibreOffice
         - org.gimp.GIMP
 
-  # Branding
+  # 5) Branding
   - type: os-release
     name: vic-os
-    pretty-name: "vic‑os (Bazzite + COSMIC)"
+    pretty-name: "vic‑os (COSMIC Atomic + kernel-blu + akmods)"
     variant: "vic-os"
     variant-id: vic-os
 
-  # Sign the image if cosign is configured
+  # 6) Sign the image if cosign is configured
   - type: signing

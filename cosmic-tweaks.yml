@@ -1,0 +1,12 @@
+---
+# Optional extra module file; include from recipe with:
+# - from-file: cosmic-tweaks.yml
+modules:
+  - type: gschema-overrides
+    filename: 99-vic-os.gschema.override
+    keys:
+      # Example placeholders — adjust to real COSMIC schemas as available
+      # 'com.system76.cosmic-panel':
+      #   panel-position: 'bottom'
+      # 'com.system76.cosmic-launcher':
+      #   hotkey: '<Super>'
